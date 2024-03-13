@@ -1,36 +1,69 @@
-import { query, update, text, Ok, Record, Err, Null, Variant, StableBTreeMap, Principal, nat64, Result, ic, Canister, Vec } from "azle";
+import {
+    query,
+    update,
+    text,
+    Ok,
+    Record,
+    Err,
+    Null,
+    Variant,
+    StableBTreeMap,
+    Principal,
+    nat64,
+    Result,
+    ic,
+    Canister,
+    Vec
+} from "azle";
 import { v4 as uuidv4 } from "uuid";
 
 /**
- * Define a record for Account.
+ * Defines a record for an account.
+ * @typedef {Object} Account
+ * @property {Principal} principal - Principal identifier for the account.
+ * @property {nat64} balance - Balance of the account.
  */
 const Account = Record({
-    principal: Principal, // Principal identifier for the account
-    balance: nat64 // Balance of the account
+    principal: Principal,
+    balance: nat64
 });
 
 /**
- * Define a variant for different types of transactions.
+ * Defines a variant for different types of transactions.
+ * @typedef {Variant} TransactionType
+ * @property {Null} Credit - Credit transaction.
+ * @property {Null} Debit - Debit transaction.
+ * @property {Null} Cash - Cash transaction.
+ * @property {Null} Bank - Bank transaction.
  */
 const TransactionType = Variant({
-    Credit: Null, // Credit transaction
-    Debit: Null, // Debit transaction
-    Cash: Null, // Cash transaction
-    Bank: Null // Bank transaction
+    Credit: Null,
+    Debit: Null,
+    Cash: Null,
+    Bank: Null
 });
 
 /**
- * Define a record for Transaction.
+ * Defines a record for a transaction.
+ * @typedef {Object} Transaction
+ * @property {text} id - Transaction ID.
+ * @property {Principal} from - Sender's account principal.
+ * @property {Principal} to - Receiver's account principal.
+ * @property {nat64} amount - Amount of the transaction.
+ * @property {text} currency - Currency of the transaction.
+ * @property {TransactionType} transactionType - Type of transaction (Credit, Debit, Cash, Bank).
+ * @property {nat64} timestamp - Timestamp of the transaction.
+ * @property {text} description - Description of the transaction.
  */
 const Transaction = Record({
-    id: text, // Transaction ID
-    from: Principal, // Sender's account principal
-    to: Principal, // Receiver's account principal
-    amount: nat64, // Amount of the transaction
-    currency: text, // Currency of the transaction
-    transactionType: TransactionType, // Type of transaction (Credit, Debit, Cash, Bank)
-    timestamp: nat64, // Timestamp of the transaction
-    description: text // Description of the transaction
+    id: text,
+    from: Principal,
+    to: Principal,
+    amount: nat64,
+    currency: text,
+    transactionType: TransactionType,
+    timestamp: nat64,
+    description: text
 });
 
 // Storage for storing accounts
@@ -41,8 +74,11 @@ const transactionsStorage = StableBTreeMap(1, text, Transaction);
 
 // Decentralized Bookkeeping System
 export default Canister({
+
     /**
      * Function to register a user's account.
+     * @param {Principal} principal - Principal identifier of the user.
+     * @returns {text} Success message indicating account registration.
      */
     registerUser: update([], text, () => {
         const principal = ic.caller();
@@ -55,6 +91,56 @@ export default Canister({
     }),
 
     /**
+     * Function to record a transaction.
+     * @param {Principal} from - Sender's account principal.
+     * @param {Principal} to - Receiver's account principal.
+     * @param {nat64} amount - Amount of the transaction.
+     * @param {text} currency - Currency of the transaction.
+     * @param {text} description - Description of the transaction.
+     * @param {TransactionType} transactionType - Type of transaction (Credit, Debit, Cash, Bank).
+     * @returns {Result<text, text>} Success message or error message indicating transaction recording status.
+     */
+    recordTransaction: update([Principal, Principal, nat64, text, text, text], Result(text, text), (from, to, amount, currency, description, transactionType) => {
+        const fromAccountOpt = accountsStorage.get(from);
+        const toAccountOpt = accountsStorage.get(to);
+        if ("None" in fromAccountOpt || "None" in toAccountOpt) {
+            return Err("One of the accounts involved in the transaction doesn't exist.");
+        }
+
+        const fromAccount = fromAccountOpt.Some;
+        const toAccount = toAccountOpt.Some;
+
+        // Ensure sufficient balance in the sender's account
+        if (fromAccount.balance < amount) {
+            return Err("Insufficient balance in the sender's account.");
+        }
+
+        // Update account balances
+        fromAccount.balance -= amount;
+        toAccount.balance += amount;
+
+        // Update account balances in storage
+        accountsStorage.insert(from, fromAccount);
+        accountsStorage.insert(to, toAccount);
+
+        // Record the transaction
+        const transactionId = uuidv4();
+        const transaction = {
+            id: transactionId,
+            from: from,
+            to: to,
+            amount: amount,
+            currency: currency,
+            transactionType: transactionType, // Provided transaction type
+            timestamp: ic.time(),
+            description: description
+        };
+        transactionsStorage.insert(transactionId, transaction);
+
+        return Ok(`Transaction recorded successfully with ID ${transactionId}`);
+    }),
+
+ /**
      * Function to record a transaction.
      */
     recordTransaction: update([Principal, Principal, nat64, text, text, text], Result(text, text), (from, to, amount, currency, description, transactionType) => {
