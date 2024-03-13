@@ -1,0 +1,12 @@
+service: () -> {
+    getAccountBalance: (principal) -> (variant {Ok:nat64; Err:text}) query;
+    getBankTransactions: (principal) -> (vec record {id:text; to:principal; transactionType:variant {Bank; Cash; Debit; Credit}; from:principal; description:text; currency:text; timestamp:nat64; amount:nat64}) query;
+    getCashTransactions: (principal) -> (vec record {id:text; to:principal; transactionType:variant {Bank; Cash; Debit; Credit}; from:principal; description:text; currency:text; timestamp:nat64; amount:nat64}) query;
+    getCreditTransactions: (principal) -> (vec record {id:text; to:principal; transactionType:variant {Bank; Cash; Debit; Credit}; from:principal; description:text; currency:text; timestamp:nat64; amount:nat64}) query;
+    getDebitTransactions: (principal) -> (vec record {id:text; to:principal; transactionType:variant {Bank; Cash; Debit; Credit}; from:principal; description:text; currency:text; timestamp:nat64; amount:nat64}) query;
+    getTransactionDetails: (text) -> (variant {Ok:record {id:text; to:principal; transactionType:variant {Bank; Cash; Debit; Credit}; from:principal; description:text; currency:text; timestamp:nat64; amount:nat64}; Err:text}) query;
+    getTransactionHistory: (principal) -> (vec record {id:text; to:principal; transactionType:variant {Bank; Cash; Debit; Credit}; from:principal; description:text; currency:text; timestamp:nat64; amount:nat64}) query;
+    recordTransaction: (principal, principal, nat64, text, text, text) -> (variant {Ok:text; Err:text});
+    registerUser: () -> (text);
+    transferFunds: (principal, principal, nat64, text, text) -> (variant {Ok:text; Err:text});
+}
