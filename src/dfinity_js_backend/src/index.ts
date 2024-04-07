@@ -35,9 +35,6 @@ const Customer = Record({
 // Define message variants for error handling and responses
 const Message = Variant({
     NotFound: text,
-    InvalidPayload: text,
-    PaymentFailed: text,
-    PaymentCompleted: text
 });
 
 // Define the data storage locations for bookings, appointments, and customers

@@ -1,6 +1,6 @@
 // RegistrationForm.js
 import React, { useState } from 'react';
-import { registerUser } from '../../utils/marketplace';
+import { registerUser } from '../../utils/booking';
 
 const RegistrationForm = () => {
   const [registrationStatus, setRegistrationStatus] = useState(null);

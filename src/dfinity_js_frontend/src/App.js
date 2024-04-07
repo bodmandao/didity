@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useState } from "react";
-import { Container, Nav } from "react-bootstrap";
+import { Container, Nav, Button } from "react-bootstrap";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "./App.css";
 import Wallet from "./components/Wallet";
@@ -8,9 +8,11 @@ import { login, logout as destroy } from "./utils/auth";
 import { balance as principalBalance } from "./utils/ledger"
 import Cover from "./components/utils/Cover";
 import { Notification } from "./components/utils/Notifications";
-import Navbar from "./components/marketplace/Navbar";
-import RegistrationForm from "./components/marketplace/RegistrationForm";
-import TransactionForm from "./components/marketplace/TransactionForm";
+// import Link from 'next/link';
+// import AllAppointmentsPage from "./components/marketplace/AllAppointmentsPage";
+import AllAppointments from "./components/marketplace/AllAppointmentsPage";
+import AppointmentCreationPage from "./components/marketplace/AppointmentCreationPage";
+
 
 const App = function AppWrapper() {
     const isAuthenticated = window.auth.isAuthenticated;
@@ -44,12 +46,28 @@ const App = function AppWrapper() {
                             />
                         </Nav.Item>
                     </Nav>
-                    <main>
-                        <Navbar />
-                        <RegistrationForm />
-                        <TransactionForm />
-                    </main>
+                    <>
+                    <Container className="mt-4">
+                        <h1>Welcome to Appointment System</h1>
+                        <AppointmentCreationPage />
+                        <AllAppointments />
+                        {/* <Link href="/create-appointment">
+                            <Button variant="primary" className="mr-2">
+                            Create Appointment
+                            </Button>
+                        </Link>
+                        <Link href="/all-appointments">
+                            <Button variant="info" className="mr-2">
+                            All Appointments
+                            </Button>
+                        </Link>
+                        <Link href="/my-bookings">
+                            <Button variant="success">My Bookings</Button>
+                        </Link> */}
+                    </Container>
+                    </>
                 </Container>
+            
             ) : (
                 <Cover name="Street Foods" login={login} coverImg={coverImg} />
             )}

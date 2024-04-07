@@ -1,7 +1,7 @@
 // TransactionForm.js
 import React, { useState } from 'react';
 import { Principal } from '@dfinity/principal';
-import { transferFunds } from '../../utils/marketplace';
+import { transferFunds } from '../../utils/booking';
 
 
 const TransactionForm = () => {
