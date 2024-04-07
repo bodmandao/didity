@@ -1,223 +1,198 @@
-import { query, update, text, Ok, Record, Err, Null, Variant, StableBTreeMap, Principal, nat64, Result, ic, Canister, Vec } from "azle";
+import { query, update, text, Record,Variant,Err, Result,StableBTreeMap, Vec,Ok, Principal, nat64, bool, Canister } from "azle";
+import { hashCode } from "hashcode";
 import { v4 as uuidv4 } from "uuid";
 
-/**
- * Define a record for Account.
- */
-const Account = Record({
-    principal: Principal, // Principal identifier for the account
-    balance: nat64 // Balance of the account
+// Define the constructs for Booking, Appointment, and Customer
+const Booking = Record({
+    id: text,
+    customerId: text,
+    appointmentId: text,
+    status: text,
+    createdAt: nat64,
+    updatedAt: nat64
 });
 
-/**
- * Define a variant for different types of transactions.
- */
-const TransactionType = Variant({
-    Credit: Null, // Credit transaction
-    Debit: Null, // Debit transaction
-    Cash: Null, // Cash transaction
-    Bank: Null // Bank transaction
+const Appointment = Record({
+    id: text,
+    title: text,
+    description: text,
+    date: nat64,
+    duration: nat64,
+    available: bool,
+    createdAt: nat64,
+    updatedAt: nat64
 });
 
-/**
- * Define a record for Transaction.
- */
-const Transaction = Record({
-    id: text, // Transaction ID
-    from: Principal, // Sender's account principal
-    to: Principal, // Receiver's account principal
-    amount: nat64, // Amount of the transaction
-    currency: text, // Currency of the transaction
-    transactionType: TransactionType, // Type of transaction (Credit, Debit, Cash, Bank)
-    timestamp: nat64, // Timestamp of the transaction
-    description: text // Description of the transaction
+const Customer = Record({
+    id: text,
+    name: text,
+    email: text,
+    phoneNumber: text,
+    createdAt: nat64,
+    updatedAt: nat64
 });
 
-// Storage for storing accounts
-const accountsStorage = StableBTreeMap(0, Principal, Account);
+// Define message variants for error handling and responses
+const Message = Variant({
+    NotFound: text,
+    InvalidPayload: text,
+    PaymentFailed: text,
+    PaymentCompleted: text
+});
 
-// Storage for storing transactions
-const transactionsStorage = StableBTreeMap(1, text, Transaction);
+// Define the data storage locations for bookings, appointments, and customers
+const bookingStorage = StableBTreeMap(0, text, Booking);
+const appointmentStorage = StableBTreeMap(1, text, Appointment);
+const customerStorage = StableBTreeMap(2, text, Customer);
 
-// Decentralized Bookkeeping System
+// Create an instance of the booking system canister
 export default Canister({
-    /**
-     * Function to register a user's account.
-     */
-    registerUser: update([], text, () => {
-        const principal = ic.caller();
-        const account = {
-            principal: principal,
-            balance: 0n
+
+    // Get all appointments available for booking
+    getAllAppointments: query([], Vec(Appointment), () => {
+        const appointments = appointmentStorage.values();
+        return appointments.filter(appointment => appointment.available);
+    }),
+
+    // Book an appointment
+    bookAppointment: update([text, text],Result(text,Message), (appointmentId, customerId) => {
+        const appointment = appointmentStorage.get(appointmentId);
+        if (!appointment || !appointment.Some.available) {
+            return Err({NotFound : `Appointment with ID ${appointmentId} is not available.`});
+        }
+
+        const customer = customerStorage.get(customerId);
+        if (!customer.Some) {
+            return Err({NotFound : `Customer with ID ${customerId} does not exist.`});
+        }
+
+        const booking = {
+            id: uuidv4(),
+            customerId: customerId,
+            appointmentId: appointmentId,
+            status: "Booked",
+            createdAt: Date.now(),
+            updatedAt: Date.now()
         };
-        accountsStorage.insert(principal, account);
-        return `User account registered successfully with principal ${principal.toText()}`;
+
+        const updatedAppointment = appointment.Some
+        bookingStorage.insert(booking.id, booking);
+        appointment.Some.available = false;
+        appointmentStorage.insert(updatedAppointment.id, updatedAppointment);
+
+        return Ok(`Booked appointment with ID ${booking.id}`);
     }),
 
-    /**
-     * Function to record a transaction.
-     */
-    recordTransaction: update([Principal, Principal, nat64, text, text, text], Result(text, text), (from, to, amount, currency, description, transactionType) => {
-        const fromAccountOpt = accountsStorage.get(from);
-        const toAccountOpt = accountsStorage.get(to);
-        if ("None" in fromAccountOpt || "None" in toAccountOpt) {
-            return Err("One of the accounts involved in the transaction doesn't exist.");
+    // Get all bookings for a customer
+    getCustomerBookings: query([text], Vec(Booking), (customerId: text) => {
+        const bookings = bookingStorage.values();
+        return bookings.filter(booking => booking.customerId === customerId);
+    }),
+
+    // Cancel a booking
+    cancelBooking: update([text], Result(text,Message), (bookingId) => {
+        const booking = bookingStorage.get(bookingId);
+
+        if ("None" in booking) {
+            return Err({NotFound :`Booking with ID ${bookingId} does not exist.`});
         }
 
-        const fromAccount = fromAccountOpt.Some;
-        const toAccount = toAccountOpt.Some;
-
-        // Ensure sufficient balance in the sender's account
-        if (fromAccount.balance < amount) {
-            return Err("Insufficient balance in the sender's account.");
+        const appointment = appointmentStorage.get(booking.Some.appointmentId);
+        if (!appointment) {
+            return Err({NotFound:`Appointment for booking with ID ${bookingId} does not exist.`});
         }
 
-        // Update account balances
-        fromAccount.balance -= amount;
-        toAccount.balance += amount;
+        const updatedBooking = booking.Some
+        updatedBooking.status = "Cancelled";
+        updatedBooking.updatedAt = Date.now();
 
-        // Update account balances in storage
-        accountsStorage.insert(from, fromAccount);
-        accountsStorage.insert(to, toAccount);
+        appointment.Some.available = true;
+        bookingStorage.insert(updatedBooking.id, updatedBooking);
 
-        // Record the transaction
-        const transactionId = uuidv4();
-        const transaction = {
-            id: transactionId,
-            from: from,
-            to: to,
-            amount: amount,
-            currency: currency,
-            transactionType: transactionType, // Provided transaction type
-            timestamp: ic.time(),
-            description: description
+        appointmentStorage.insert(updatedBooking.appointmentId, appointment.Some);
+
+        return Ok(`Canceled with ID ${booking.Some.id}`);
+    }),
+
+    // Create a new appointment
+    createAppointment: update([text, text, nat64, nat64], Result(text,Message), (title, description, date, duration: nat64) => {
+        const appointment = {
+            id: uuidv4(),
+            title: title,
+            description: description,
+            date: date,
+            duration: duration,
+            available: true,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
         };
-        transactionsStorage.insert(transactionId, transaction);
 
-        return Ok(`Transaction recorded successfully with ID ${transactionId}`);
+        appointmentStorage.insert(appointment.id, appointment);
+        return Ok(`Created with ID ${appointment.id}`);
     }),
 
-    /**
-     * Function to get account balance.
-     */
-    getAccountBalance: query([Principal], Result(nat64, text), (principal) => {
-        const accountOpt = accountsStorage.get(principal);
-        if ("None" in accountOpt) {
-            return Err("Account not found.");
-        }
-        return Ok(accountOpt.Some.balance);
-    }),
-
-    /**
-     * Function to get transaction details.
-     */
-    getTransactionDetails: query([text], Result(Transaction, text), (transactionId) => {
-        const transactionOpt = transactionsStorage.get(transactionId);
-        if ("None" in transactionOpt) {
-            return Err("Transaction not found.");
-        }
-        return Ok(transactionOpt.Some);
-    }),
-
-    /**
-     * Function to get transaction history of an account.
-     */
-    getTransactionHistory: query([Principal], Vec(Transaction), (principal) => {
-        const transactions = transactionsStorage.values();
-        const accountTransactions = transactions.filter(transaction => transaction.from.equals(principal) || transaction.to.equals(principal));
-        return accountTransactions;
-    }),
-
-    /**
-     * Function to get cash transactions associated with an account.
-     */
-    getCashTransactions: query([Principal], Vec(Transaction), (principal) => {
-        const transactions = transactionsStorage.values();
-        const cashTransactions = transactions.filter(transaction => transaction.transactionType.isSome("Cash") && (transaction.from.equals(principal) || transaction.to.equals(principal)));
-        return cashTransactions;
-    }),
-
-    /**
-     * Function to get debit transactions associated with an account.
-     */
-    getDebitTransactions: query([Principal], Vec(Transaction), (principal) => {
-        const transactions = transactionsStorage.values();
-        const debitTransactions = transactions.filter(transaction => transaction.transactionType.isSome("Debit") && (transaction.from.equals(principal) || transaction.to.equals(principal)));
-        return debitTransactions;
-    }),
-
-    /**
-     * Function to get bank transactions associated with an account.
-     */
-    getBankTransactions: query([Principal], Vec(Transaction), (principal) => {
-        const transactions = transactionsStorage.values();
-        const bankTransactions = transactions.filter(transaction => transaction.transactionType.isSome("Bank") && (transaction.from.equals(principal) || transaction.to.equals(principal)));
-        return bankTransactions;
-    }),
-
-    /**
-     * Function to get credit transactions associated with an account.
-     */
-    getCreditTransactions: query([Principal], Vec(Transaction), (principal) => {
-        const transactions = transactionsStorage.values();
-        const creditTransactions = transactions.filter(transaction => transaction.transactionType.isSome("Credit") && (transaction.from.equals(principal) || transaction.to.equals(principal)));
-        return creditTransactions;
-    }),
-
-    /**
-     * Function to transfer funds between accounts.
-     */
-    transferFunds: update([Principal, Principal, nat64, text, text], Result(text, text), (from, to, amount, description, transactionType) => {
-        const fromAccountOpt = accountsStorage.get(from);
-        const toAccountOpt = accountsStorage.get(to);
-        if ("None" in fromAccountOpt || "None" in toAccountOpt) {
-            return Err("One of the accounts involved in the transfer doesn't exist.");
-        }
-
-        const fromAccount = fromAccountOpt.Some;
-        const toAccount = toAccountOpt.Some;
-
-        // Ensure sufficient balance in the sender's account
-        if (fromAccount.balance < amount) {
-            return Err("Insufficient balance in the sender's account.");
-        }
-
-        // Update account balances
-        fromAccount.balance -= amount;
-        toAccount.balance += amount;
-
-        // Update account balances in storage
-        accountsStorage.insert(from, fromAccount);
-        accountsStorage.insert(to, toAccount);
-
-        // Record the transaction
-        const transactionId = uuidv4();
-        const transaction = {
-            id: transactionId,
-            from: from,
-            to: to,
-            amount: amount,
-            currency: "USD", // Assuming a default currency
-            transactionType: transactionType,
-            timestamp: ic.time(),
-            description: description
+    // Register a new customer
+    registerCustomer: update([text, text, text],Result(text,Message), (name, email, phoneNumber) => {
+        const customer = {
+            id: uuidv4(),
+            name: name,
+            email: email,
+            phoneNumber: phoneNumber,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
         };
-        transactionsStorage.insert(transactionId, transaction);
 
-        return Ok(`Funds transferred successfully with ID ${transactionId}`);
+        customerStorage.insert(customer.id, customer);
+        return Ok(`Registered with ID ${customer.id}`);
     }),
+
+     // Update appointment details
+     updateAppointment: update([text, text, text, nat64, nat64], Result(text, Message), (appointmentId, title, description, date, duration) => {
+        const appointment = appointmentStorage.get(appointmentId);
+        if (!appointment) {
+            return Err({ NotFound: `Appointment with ID ${appointmentId} does not exist.` });
+        }
+
+        appointment.Some.title = title;
+        appointment.Some.description = description;
+        appointment.Some.date = date;
+        appointment.Some.duration = duration;
+        appointment.Some.updatedAt = Date.now();
+
+        appointmentStorage.insert(appointmentId, appointment.Some);
+        return Ok(`Updated appointment with ID ${appointmentId}`);
+    }),
+
+    // Get details of a single appointment by ID
+    getAppointmentById: query([text], Result(Appointment, Message), (appointmentId: text) => {
+        const appointment = appointmentStorage.get(appointmentId);
+        return appointment ? Ok(appointment.Some) : Err({ NotFound: `Appointment with ID ${appointmentId} not found.` });
+    }),
+
+    // Get details of a single customer by ID
+    getCustomerById: query([text], Result(Customer, Message), (customerId: text) => {
+        const customer = customerStorage.get(customerId);
+        return customer ? Ok(customer.Some) : Err({ NotFound: `Customer with ID ${customerId} not found.` });
+    }),
+
+    // Get details of a single booking by ID
+    getBookingById: query([text], Result(Booking, Message), (bookingId: text) => {
+        const booking = bookingStorage.get(bookingId);
+        return booking ? Ok(booking.Some) : Err({ NotFound: `Booking with ID ${bookingId} not found.` });
+    }),
+
 });
+    // a workaround to make uuid package work with Azle
+    globalThis.crypto = {
+        // @ts-ignore
+        getRandomValues: () => {
+            let array = new Uint8Array(32);
 
-// A workaround to make the uuid package work with Azle
-globalThis.crypto = {
-    // @ts-ignore
-    getRandomValues: () => {
-        let array = new Uint8Array(32);
+            for (let i = 0; i < array.length; i++) {
+                array[i] = Math.floor(Math.random() * 256);
+            }
 
-        for (let i = 0; i < array.length; i++) {
-            array[i] = Math.floor(Math.random() * 256);
+            return array;
         }
+    };
 
-        return array;
-    }
-};
