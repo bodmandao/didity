@@ -21,9 +21,9 @@ export async function getCustomerBookings(customerId) {
 }
 
 // Function to get all appointments 
-export async function getAllAppointments() {
+export async function getAvailableAppointments() {
   try {
-    return await window.canister.marketplace.getAllAppointments();
+    return await window.canister.marketplace.getAvailableAppointments();
   } catch (err) {
     // Log error if fetching appointments fails
     console.error("Error fetching appointments :", err);

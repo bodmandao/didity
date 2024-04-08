@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AppoinmentCard from './AppoinmentCard';
-import { getAllAppointments } from '../../utils/booking';
+import { getAvailableAppointments } from '../../utils/booking';
 import Layout from './Layout';
 
 const AllAppointments = () => {
@@ -9,7 +9,7 @@ const AllAppointments = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const allAppointments = await getAllAppointments();
+        const allAppointments = await getAvailableAppointments();
         setAppointments(allAppointments);
       } catch (error) {
         console.error('Error fetching appointments:', error);

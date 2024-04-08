@@ -1,12 +1,12 @@
 service: () -> {
-    bookAppointment: (text, text) -> (variant {Ok:text; Err:variant {NotFound:text}});
-    cancelBooking: (text) -> (variant {Ok:text; Err:variant {NotFound:text}});
-    createAppointment: (text, text, nat64, nat64) -> (variant {Ok:text; Err:variant {NotFound:text}});
-    getAllAppointments: () -> (vec record {id:text; title:text; duration:nat64; date:nat64; createdAt:nat64; description:text; available:bool; updatedAt:nat64}) query;
-    getAppointmentById: (text) -> (variant {Ok:record {id:text; title:text; duration:nat64; date:nat64; createdAt:nat64; description:text; available:bool; updatedAt:nat64}; Err:variant {NotFound:text}}) query;
-    getBookingById: (text) -> (variant {Ok:record {id:text; status:text; createdAt:nat64; updatedAt:nat64; customerId:text; appointmentId:text}; Err:variant {NotFound:text}}) query;
+    bookAppointment: (text, text) -> (variant {Ok:text; Err:variant {NotAvailable:text; NotFound:text}});
+    cancelBooking: (text) -> (variant {Ok:text; Err:variant {NotAvailable:text; NotFound:text}});
+    createAppointment: (text, text, nat64, nat64) -> (variant {Ok:text; Err:variant {NotAvailable:text; NotFound:text}});
+    getAppointmentById: (text) -> (variant {Ok:record {id:text; title:text; duration:nat64; date:nat64; createdAt:nat64; description:text; available:bool; updatedAt:nat64}; Err:variant {NotAvailable:text; NotFound:text}}) query;
+    getAvailableAppointments: () -> (vec record {id:text; title:text; duration:nat64; date:nat64; createdAt:nat64; description:text; available:bool; updatedAt:nat64}) query;
+    getBookingById: (text) -> (variant {Ok:record {id:text; status:text; createdAt:nat64; updatedAt:nat64; customerId:text; appointmentId:text}; Err:variant {NotAvailable:text; NotFound:text}}) query;
     getCustomerBookings: (text) -> (vec record {id:text; status:text; createdAt:nat64; updatedAt:nat64; customerId:text; appointmentId:text}) query;
-    getCustomerById: (text) -> (variant {Ok:record {id:text; name:text; createdAt:nat64; email:text; updatedAt:nat64; phoneNumber:text}; Err:variant {NotFound:text}}) query;
-    registerCustomer: (text, text, text) -> (variant {Ok:text; Err:variant {NotFound:text}});
-    updateAppointment: (text, text, text, nat64, nat64) -> (variant {Ok:text; Err:variant {NotFound:text}});
+    getCustomerById: (text) -> (variant {Ok:record {id:text; name:text; createdAt:nat64; email:text; updatedAt:nat64; phoneNumber:text}; Err:variant {NotAvailable:text; NotFound:text}}) query;
+    registerCustomer: (text, text, text) -> (variant {Ok:text; Err:variant {NotAvailable:text; NotFound:text}});
+    updateAppointment: (text, text, text, nat64, nat64) -> (variant {Ok:text; Err:variant {NotAvailable:text; NotFound:text}});
 }
