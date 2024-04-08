@@ -35,6 +35,7 @@ const Customer = Record({
 // Define message variants for error handling and responses
 const Message = Variant({
     NotFound: text,
+    NotAvailable: text,
 });
 
 // Define the data storage locations for bookings, appointments, and customers
@@ -46,7 +47,7 @@ const customerStorage = StableBTreeMap(2, text, Customer);
 export default Canister({
 
     // Get all appointments available for booking
-    getAllAppointments: query([], Vec(Appointment), () => {
+    getAvailableAppointments: query([], Vec(Appointment), () => {
         const appointments = appointmentStorage.values();
         return appointments.filter(appointment => appointment.available);
     }),
@@ -54,12 +55,15 @@ export default Canister({
     // Book an appointment
     bookAppointment: update([text, text],Result(text,Message), (appointmentId, customerId) => {
         const appointment = appointmentStorage.get(appointmentId);
-        if (!appointment || !appointment.Some.available) {
-            return Err({NotFound : `Appointment with ID ${appointmentId} is not available.`});
+        if ("None" in appointment) {
+            return Err({NotFound : `Appointment with ID ${appointmentId} not found.`});
+        }
+        if (!appointment.Some.available) {
+            return Err({NotAvailable : `Appointment with ID ${appointmentId} is not available.`});
         }
 
         const customer = customerStorage.get(customerId);
-        if (!customer.Some) {
+        if ("None" in customer) {
             return Err({NotFound : `Customer with ID ${customerId} does not exist.`});
         }
 
@@ -95,7 +99,7 @@ export default Canister({
         }
 
         const appointment = appointmentStorage.get(booking.Some.appointmentId);
-        if (!appointment) {
+        if ("None" in appointment) {
             return Err({NotFound:`Appointment for booking with ID ${bookingId} does not exist.`});
         }
 
@@ -146,7 +150,7 @@ export default Canister({
      // Update appointment details
      updateAppointment: update([text, text, text, nat64, nat64], Result(text, Message), (appointmentId, title, description, date, duration) => {
         const appointment = appointmentStorage.get(appointmentId);
-        if (!appointment) {
+        if ("None" in appointment) {
             return Err({ NotFound: `Appointment with ID ${appointmentId} does not exist.` });
         }
 
@@ -163,19 +167,19 @@ export default Canister({
     // Get details of a single appointment by ID
     getAppointmentById: query([text], Result(Appointment, Message), (appointmentId: text) => {
         const appointment = appointmentStorage.get(appointmentId);
-        return appointment ? Ok(appointment.Some) : Err({ NotFound: `Appointment with ID ${appointmentId} not found.` });
+        return "None" in appointment ? Err({ NotFound: `Appointment with ID ${appointmentId} not found.` }) : Ok(appointment.Some);
     }),
 
     // Get details of a single customer by ID
     getCustomerById: query([text], Result(Customer, Message), (customerId: text) => {
         const customer = customerStorage.get(customerId);
-        return customer ? Ok(customer.Some) : Err({ NotFound: `Customer with ID ${customerId} not found.` });
+        return "None" in customer ? Err({ NotFound: `Customer with ID ${customerId} not found.` }) : Ok(customer.Some) ;
     }),
 
     // Get details of a single booking by ID
     getBookingById: query([text], Result(Booking, Message), (bookingId: text) => {
         const booking = bookingStorage.get(bookingId);
-        return booking ? Ok(booking.Some) : Err({ NotFound: `Booking with ID ${bookingId} not found.` });
+        return "None" in booking ? Err({ NotFound: `Booking with ID ${bookingId} not found.` }): Ok(booking.Some);
     }),
 
 });
