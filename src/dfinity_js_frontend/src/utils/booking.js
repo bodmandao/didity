@@ -91,6 +91,17 @@ export async function getCustomerById(bookingId) {
   }
 }
 
+// Function to get customer by email
+export async function getCustomerByEmail(email) {
+  try {
+    return await window.canister.marketplace.getCustomerByEmail(email);
+  } catch (err) {
+    // Log error if fetching customer fails
+    console.error("Error fetching customer:", err);
+    return []; // Return empty array to indicate error
+  }
+}
+
 // Function to get booking by ID
 export async function getBookingById(bookingId) {
   try {

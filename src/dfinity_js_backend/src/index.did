@@ -6,6 +6,7 @@ service: () -> {
     getAppointmentById: (text) -> (variant {Ok:record {id:text; title:text; duration:nat64; date:nat64; createdAt:nat64; description:text; available:bool; updatedAt:nat64}; Err:variant {NotFound:text}}) query;
     getBookingById: (text) -> (variant {Ok:record {id:text; status:text; createdAt:nat64; updatedAt:nat64; customerId:text; appointmentId:text}; Err:variant {NotFound:text}}) query;
     getCustomerBookings: (text) -> (vec record {id:text; status:text; createdAt:nat64; updatedAt:nat64; customerId:text; appointmentId:text}) query;
+    getCustomerByEmail: (text) -> (variant {Ok:record {id:text; name:text; createdAt:nat64; email:text; updatedAt:nat64; phoneNumber:text}; Err:variant {NotFound:text}}) query;
     getCustomerById: (text) -> (variant {Ok:record {id:text; name:text; createdAt:nat64; email:text; updatedAt:nat64; phoneNumber:text}; Err:variant {NotFound:text}}) query;
     registerCustomer: (text, text, text) -> (variant {Ok:text; Err:variant {NotFound:text}});
     updateAppointment: (text, text, text, nat64, nat64) -> (variant {Ok:text; Err:variant {NotFound:text}});

@@ -48,7 +48,7 @@ const App = function AppWrapper() {
                     </Nav>
                     <>
                     <Container className="mt-4">
-                        <h1>Welcome to Appointment System</h1>
+                        <h1 className="text-warning text-center fw-bold">Welcome to Appointment System</h1>
                         <AppointmentCreationPage />
                         <AllAppointments />
                         {/* <Link href="/create-appointment">

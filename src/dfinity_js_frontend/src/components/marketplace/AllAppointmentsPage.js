@@ -20,11 +20,11 @@ const AllAppointments = () => {
 
   return (
     <div className="container mt-4">
-      <h1>All Appointments</h1>
+      <h1 className='text-primary text-left fw-bold my-5'>All Appointments</h1>
       <div className="row">
         {appointments.map((appointment) => (
           <div key={appointment.id} className="col-md-4 mb-4">
-            <AppoinmentCard booking={appointment} />
+            <AppoinmentCard appointment={appointment} />
           </div>
         ))}
       </div>

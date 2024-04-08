@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import { toast } from "react-toastify";
-
+import RegistrationModal from './RegistrationModal';
 // import Layout from '../components/Layout';
 import { createAppointment } from '../../utils/booking';
 import { NotificationError,NotificationSuccess } from '../utils/Notifications';
@@ -11,6 +11,7 @@ const AppointmentCreationPage = () => {
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
   const [duration, setDuration] = useState('');
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,10 +26,18 @@ const AppointmentCreationPage = () => {
     // Optionally, redirect to another page after appointment creation
   };
 
+  const handleRegisterClick = async () => {
+    setShowRegisterModal(true);
+  };
+
   return (
     // <Layout>
       <div className="container mt-4">
-        <h1>Create Appointment</h1>
+        <Button variant="info" className='btn btn-primary text-center' onClick={handleRegisterClick}>Click to Register</Button>
+        {/* Register Modal */}
+      <RegistrationModal show={showRegisterModal} handleClose={() => setShowRegisterModal(false)} />
+
+        <h1 className='mt-5 text-primary fw-bold text-left'>Create Appointment</h1>
         <Form onSubmit={handleSubmit}>
           <Form.Group controlId="formTitle">
             <Form.Label>Title</Form.Label>

@@ -172,6 +172,13 @@ export default Canister({
         return customer ? Ok(customer.Some) : Err({ NotFound: `Customer with ID ${customerId} not found.` });
     }),
 
+    // Get details of a single customer by Email
+    getCustomerByEmail: query([text], Result(Customer, Message), (email: text) => {
+        const customers = customerStorage.values() // Assuming customerStorage is an object of customers
+        const customer = customers.find(customer => customer.email === email);
+        return customer ? Ok(customer) : Err({ NotFound: `Customer with email ${email} not found.` });
+    }),
+
     // Get details of a single booking by ID
     getBookingById: query([text], Result(Booking, Message), (bookingId: text) => {
         const booking = bookingStorage.get(bookingId);
