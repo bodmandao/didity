@@ -11,6 +11,8 @@ const AppointmentCard = ({ appointment }) => {
   const [title, setTitle] = useState(appointment.title);
   const [description, setDescription] = useState(appointment.description);
   const [date, setDate] = useState(appointment.date);
+  const [duration, setDuration] = useState(appointment.duration);
+  const [availability, setAvailability] = useState(appointment.available);
   const [email, setEmail] = useState('');
   const [customerId, setCustomerId] = useState('');
   const [backgroundImage, setBackgroundImage] = useState('');
@@ -77,7 +79,8 @@ const AppointmentCard = ({ appointment }) => {
 
   const handleUpdateClick = async () => {
     try {
-      const updatedAppointment = await updateAppointment(appointment.id, title, description, BigInt(date), BigInt(appointment.duration));
+      console.log(appointment)
+      const updatedAppointment = await updateAppointment(appointment.id, title, description, BigInt(date), duration);
       if (updatedAppointment.Ok) {
         setTitle(updatedAppointment.title);
         setDescription(updatedAppointment.description);
@@ -97,20 +100,26 @@ const AppointmentCard = ({ appointment }) => {
     <div style={{ backgroundImage: `url(${backgroundImage})`, backgroundSize: 'cover', padding: '20px' }}>
       <Card className="shadow" style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
         <Card.Body>
-          <Card.Title>{title}</Card.Title>
+          <Card.Title>Title : {title}</Card.Title>
+          <Card.Text>Description : {description}</Card.Text>
           <Card.Subtitle className="mb-2 text-muted">
-            {date}
+            Date : {Number(date)}
           </Card.Subtitle>
-          <Card.Text>{description}</Card.Text>
+          <Card.Subtitle className="mb-2 text-muted">
+            Duration : {Number(duration)} minutes
+          </Card.Subtitle>
+          <Card.Subtitle className="mb-2 text-muted">
+            Availability : {availability? 'True' : 'False'}
+          </Card.Subtitle>
           <Button variant="primary" onClick={() => setShowUpdateModal(true)}>Update</Button>
           <Button variant="success" className='mx-2' onClick={handleBookClick}>Book</Button>
-          <Button
+          {/* <Button
             variant="danger"
             onClick={handleCancelClick}
             disabled={isCanceling}
           >
             {isCanceling ? 'Cancelling...' : 'Cancel'}
-          </Button>
+          </Button> */}
         </Card.Body>
       </Card>
       {/* Update Appointment Modal */}
@@ -128,9 +137,13 @@ const AppointmentCard = ({ appointment }) => {
               <Form.Label>Description</Form.Label>
               <Form.Control as="textarea" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
             </Form.Group>
+            <Form.Group controlId="duration">
+              <Form.Label>Duration</Form.Label>
+              <Form.Control type='text' value={Number(duration)} onChange={(e) => setDuration(e.target.value)} />
+            </Form.Group>
             <Form.Group controlId="date">
               <Form.Label>Date</Form.Label>
-              <Form.Control type="text" value={date} onChange={(e) => setDate(e.target.value)} />
+              <Form.Control type="text" value={Number(date)} onChange={(e) => setDate(e.target.value)} />
             </Form.Group>
           </Form>
         </Modal.Body>

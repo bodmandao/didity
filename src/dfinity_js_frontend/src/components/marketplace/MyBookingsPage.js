@@ -1,50 +1,88 @@
+import React, { useState, useEffect } from 'react';
+import { Modal, Button, Form } from 'react-bootstrap';
+import { getCustomerByEmail, getCustomerBookings } from '../../utils/booking';
+import MyBookingsModal from './MyBookingsModal';
+import { NotificationError, NotificationSuccess } from '../utils/Notifications';
+import { toast } from "react-toastify";
 
-import React,{ useEffect, useState } from 'react';
-import { getCustomerBookings, cancelBooking } from '../../utils/booking';
-import BookingCard from './AppoinmentCard';
 
-const MyBookingsPage = ({ customerId }) => {
+const MyBookingsPage = () => {
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showBookingsModal, setShowBookingsModal] = useState(false);
+  const [email, setEmail] = useState('');
+  const [userId, setUserId] = useState('');
   const [bookings, setBookings] = useState([]);
 
   useEffect(() => {
-    if (customerId) {
-      fetchBookings(customerId);
+    if (showBookingsModal && userId) {
+      fetchBookings();
     }
-  }, [customerId]);
+  }, [showBookingsModal, userId]);
 
-  const fetchBookings = async (customerId) => {
+  const fetchBookings = async () => {
     try {
-      const customerBookings = await getCustomerBookings(customerId);
+      const customerBookings = await getCustomerBookings(userId); // 
+      // console.log(customerBookings,1)
       setBookings(customerBookings);
     } catch (error) {
-      console.error('Error fetching customer bookings:', error);
+      console.error('Error fetching bookings:', error);
     }
   };
 
-  const handleCancelBooking = async (bookingId) => {
+  const handleEmailSubmit = async (e) => {
+    e.preventDefault();
     try {
-      await cancelBooking(bookingId);
-      // Refresh bookings after cancellation
-      fetchBookings(customerId);
+      const customer = await getCustomerByEmail(email);
+      if (customer.Ok) {
+        setUserId(customer.Ok.id);
+        setShowEmailModal(false);
+        setShowBookingsModal(true);
+      } else {
+        toast(<NotificationError text={`Customer ID not found for email:', ${email}`} />);
+        console.error('Customer ID not found for email:', email);
+        // Handle error, display message to the user, etc.
+      }
     } catch (error) {
-      console.error('Error cancelling booking:', error);
+      toast(<NotificationError text="Error fetching customer ID" />);
+      console.error('Error fetching customer ID:', error);
     }
   };
 
   return (
-    <div className="container mt-4">
-      <h2 className="mb-4">My Bookings</h2>
-      <div className="row">
-        {bookings.map((booking) => (
-          <div key={booking.id} className="col-lg-4 col-md-6 mb-4">
-            <BookingCard
-              booking={booking}
-              onCancelBooking={handleCancelBooking}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
+    <>
+      <Button variant="primary" className='mt-2 mx-2' onClick={() => setShowEmailModal(true)}>
+        Show My Bookings
+      </Button>
+
+      <Modal show={showEmailModal} onHide={() => setShowEmailModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Enter Your Email</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleEmailSubmit}>
+            <Form.Group controlId="formBasicEmail">
+              <Form.Label>Email address</Form.Label>
+              <Form.Control
+                type="email"
+                placeholder="Enter email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </Form.Group>
+            <Button className='mt-2' variant="primary" type="submit">
+              Submit
+            </Button>
+          </Form>
+        </Modal.Body>
+      </Modal>
+
+      <MyBookingsModal
+        show={showBookingsModal}
+        handleClose={() => setShowBookingsModal(false)}
+        bookings={bookings}
+      />
+    </>
   );
 };
 

@@ -5,6 +5,8 @@ import RegistrationModal from './RegistrationModal';
 // import Layout from '../components/Layout';
 import { createAppointment } from '../../utils/booking';
 import { NotificationError,NotificationSuccess } from '../utils/Notifications';
+import MyBookingsModal from './MyBookingsModal';
+import MyBookingsPage from './MyBookingsPage';
 
 const AppointmentCreationPage = () => {
   const [title, setTitle] = useState('');
@@ -12,6 +14,7 @@ const AppointmentCreationPage = () => {
   const [date, setDate] = useState('');
   const [duration, setDuration] = useState('');
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showMyBookingsModal, setShowMyBookingsModal] = useState(false); // State for showing My Bookings modal
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,12 +33,20 @@ const AppointmentCreationPage = () => {
     setShowRegisterModal(true);
   };
 
+  const handleMyBookingsClick = () => {
+    setShowMyBookingsModal(true);
+  };
+
   return (
     // <Layout>
       <div className="container mt-4">
-        <Button variant="info" className='btn btn-primary text-center' onClick={handleRegisterClick}>Click to Register</Button>
+        <Button variant="info" className='btn btn-primary text-center mt-2' onClick={handleRegisterClick}>Click to Register</Button>
+        <Button variant="primary" className="mt-2 mx-2" onClick={handleMyBookingsClick}>
+        My Bookings
+      </Button>
         {/* Register Modal */}
       <RegistrationModal show={showRegisterModal} handleClose={() => setShowRegisterModal(false)} />
+      {showMyBookingsModal && <MyBookingsPage />}
 
         <h1 className='mt-5 text-primary fw-bold text-left'>Create Appointment</h1>
         <Form onSubmit={handleSubmit}>
