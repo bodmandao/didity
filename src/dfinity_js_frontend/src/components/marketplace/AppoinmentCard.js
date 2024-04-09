@@ -4,6 +4,12 @@ import { toast } from "react-toastify";
 import { bookAppointment, cancelBooking, updateAppointment, getCustomerByEmail } from '../../utils/booking';
 import { NotificationError, NotificationSuccess } from '../utils/Notifications';
 
+/**
+ * Component to display an appointment card.
+ * @param {Object} props - Props for the component.
+ * @param {Object} props.appointment - Appointment object containing appointment details.
+ * @returns {JSX.Element} JSX element representing an appointment card.
+ */
 const AppointmentCard = ({ appointment }) => {
   const [isCanceling, setIsCanceling] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -17,9 +23,11 @@ const AppointmentCard = ({ appointment }) => {
   const [customerId, setCustomerId] = useState('');
   const [backgroundImage, setBackgroundImage] = useState('');
 
-
-   // Function to fetch random image URL from Unsplash
-   async function fetchRandomImage() {
+  /**
+   * Function to fetch random image URL from Unsplash.
+   * @returns {void}
+   */
+  async function fetchRandomImage() {
     try {
       const response = await fetch('https://source.unsplash.com/random');
       setBackgroundImage(response.url);
@@ -37,12 +45,15 @@ const AppointmentCard = ({ appointment }) => {
     setShowBookModal(true);
   };
 
+  /**
+   * Handles booking confirmation.
+   * @returns {void}
+   */
   const handleBookingConfirmed = async () => {
     try {
       // Check if email is registered
       const customer = await getCustomerByEmail(email);
       if (customer.Ok) {
-        console.log(customer.Ok)
         // If email is registered, proceed with booking
         const booking = await bookAppointment(appointment.id, customer.Ok.id);
         if (booking.Ok) {
@@ -65,6 +76,10 @@ const AppointmentCard = ({ appointment }) => {
     }
   };
 
+  /**
+   * Handles canceling an appointment.
+   * @returns {void}
+   */
   const handleCancelClick = async () => {
     setIsCanceling(true);
     try {
@@ -77,9 +92,12 @@ const AppointmentCard = ({ appointment }) => {
     }
   };
 
+  /**
+   * Handles updating an appointment.
+   * @returns {void}
+   */
   const handleUpdateClick = async () => {
     try {
-      console.log(appointment)
       const updatedAppointment = await updateAppointment(appointment.id, title, description, BigInt(date), duration);
       if (updatedAppointment.Ok) {
         setTitle(updatedAppointment.title);
@@ -109,7 +127,7 @@ const AppointmentCard = ({ appointment }) => {
             Duration : {Number(duration)} minutes
           </Card.Subtitle>
           <Card.Subtitle className="mb-2 text-muted">
-            Availability : {availability? 'True' : 'False'}
+            Availability : {availability? 'Available' : 'Not Available'}
           </Card.Subtitle>
           <Button variant="primary" onClick={() => setShowUpdateModal(true)}>Update</Button>
           <Button variant="success" className='mx-2' onClick={handleBookClick}>Book</Button>
@@ -124,7 +142,7 @@ const AppointmentCard = ({ appointment }) => {
       </Card>
       {/* Update Appointment Modal */}
       <Modal show={showUpdateModal} onHide={() => setShowUpdateModal(false)}>
-      <Modal.Header closeButton>
+        <Modal.Header closeButton>
           <Modal.Title>Update Appointment</Modal.Title>
         </Modal.Header>
         <Modal.Body>

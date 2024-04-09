@@ -1,15 +1,18 @@
-// RegistrationModal.js
-import React, { useState } from 'react';
-import { Modal, Form, Button } from 'react-bootstrap';
-import { toast } from "react-toastify";
-import { registerCustomer } from '../../utils/booking';
-import { NotificationError, NotificationSuccess } from '../utils/Notifications';
-
+/**
+ * Component representing a registration modal for users.
+ * @param {object} props - Props for the component.
+ * @param {boolean} props.show - Indicates whether the modal should be displayed.
+ * @param {Function} props.handleClose - Function to handle closing the modal.
+ * @returns {JSX.Element} Registration modal component.
+ */
 const RegistrationModal = ({ show, handleClose }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
 
+  /**
+   * Handles the registration process when the user submits the form.
+   */
   const handleRegistration = async () => {
     try {
       const result = await registerCustomer(name, email, phoneNumber);

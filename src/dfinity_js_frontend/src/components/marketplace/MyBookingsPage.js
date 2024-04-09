@@ -5,7 +5,10 @@ import MyBookingsModal from './MyBookingsModal';
 import { NotificationError, NotificationSuccess } from '../utils/Notifications';
 import { toast } from "react-toastify";
 
-
+/**
+ * Component for displaying My Bookings page.
+ * @returns {JSX.Element} JSX element representing the MyBookingsPage component.
+ */
 const MyBookingsPage = () => {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showBookingsModal, setShowBookingsModal] = useState(false);
@@ -13,22 +16,31 @@ const MyBookingsPage = () => {
   const [userId, setUserId] = useState('');
   const [bookings, setBookings] = useState([]);
 
+  /**
+   * Fetches bookings when bookings modal is shown and userId is set.
+   */
   useEffect(() => {
     if (showBookingsModal && userId) {
       fetchBookings();
     }
   }, [showBookingsModal, userId]);
 
+  /**
+   * Fetches customer bookings.
+   */
   const fetchBookings = async () => {
     try {
-      const customerBookings = await getCustomerBookings(userId); // 
-      // console.log(customerBookings,1)
+      const customerBookings = await getCustomerBookings(userId);
       setBookings(customerBookings);
     } catch (error) {
       console.error('Error fetching bookings:', error);
     }
   };
 
+  /**
+   * Handles email submission.
+   * @param {Event} e - Form submission event.
+   */
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -40,7 +52,6 @@ const MyBookingsPage = () => {
       } else {
         toast(<NotificationError text={`Customer ID not found for email:', ${email}`} />);
         console.error('Customer ID not found for email:', email);
-        // Handle error, display message to the user, etc.
       }
     } catch (error) {
       toast(<NotificationError text="Error fetching customer ID" />);

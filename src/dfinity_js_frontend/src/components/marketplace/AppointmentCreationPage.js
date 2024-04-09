@@ -8,6 +8,10 @@ import { NotificationError,NotificationSuccess } from '../utils/Notifications';
 import MyBookingsModal from './MyBookingsModal';
 import MyBookingsPage from './MyBookingsPage';
 
+/**
+ * Component for appointment creation page.
+ * @returns {JSX.Element} JSX element representing the appointment creation page.
+ */
 const AppointmentCreationPage = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -16,6 +20,11 @@ const AppointmentCreationPage = () => {
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showMyBookingsModal, setShowMyBookingsModal] = useState(false); // State for showing My Bookings modal
 
+  /**
+   * Handles form submission to create an appointment.
+   * @param {Event} e - Form submit event.
+   * @returns {void}
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -29,10 +38,18 @@ const AppointmentCreationPage = () => {
     // Optionally, redirect to another page after appointment creation
   };
 
+  /**
+   * Handles click event to open registration modal.
+   * @returns {void}
+   */
   const handleRegisterClick = async () => {
     setShowRegisterModal(true);
   };
 
+  /**
+   * Handles click event to open My Bookings modal.
+   * @returns {void}
+   */
   const handleMyBookingsClick = () => {
     setShowMyBookingsModal(true);
   };

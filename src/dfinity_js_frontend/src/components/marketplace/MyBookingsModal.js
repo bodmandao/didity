@@ -1,6 +1,14 @@
 import React from 'react';
 import { Modal, Button, Table } from 'react-bootstrap';
 
+/**
+ * Component for displaying the My Bookings modal.
+ * @param {Object} props - Props for the component.
+ * @param {boolean} props.show - Boolean indicating whether the modal should be shown.
+ * @param {Function} props.handleClose - Function to handle closing the modal.
+ * @param {Array<Object>} props.bookings - Array of bookings to display in the modal.
+ * @returns {JSX.Element} JSX element representing the My Bookings modal.
+ */
 const MyBookingsModal = ({ show, handleClose, bookings }) => {
   return (
     <Modal show={show} onHide={handleClose}>
