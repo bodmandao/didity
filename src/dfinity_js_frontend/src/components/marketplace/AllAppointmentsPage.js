@@ -30,7 +30,7 @@ const AllAppointments = () => {
 
   return (
     <div className="container mt-4">
-      <h1 className='text-primary text-left fw-bold my-5'>All Appointments</h1>
+      <h1 className='text-primary text-left fw-bold my-5'>All Available Appointments</h1>
       <div className="row">
         {/* Map through appointments and render AppointmentCard component */}
         {appointments.map((appointment) => (
