@@ -1,3 +1,10 @@
+// RegistrationModal.js
+import React, { useState } from 'react';
+import { Modal, Form, Button } from 'react-bootstrap';
+import { toast } from "react-toastify";
+import { registerCustomer } from '../../utils/booking';
+import { NotificationError, NotificationSuccess } from '../utils/Notifications';
+
 /**
  * Component representing a registration modal for users.
  * @param {object} props - Props for the component.
